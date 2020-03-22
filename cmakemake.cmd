@@ -1,0 +1,1 @@
+cmake -DCMAKE_PREFIX_PATH=C:\Users\Thembi\Desktop\Trading\libtorch-win-shared-with-deps-1.4.0\libtorch 
