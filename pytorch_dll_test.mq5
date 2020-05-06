@@ -87,9 +87,8 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
   {
-//---
-
-        if (OrdersTotal() == 0) {
+//---0
+        if (PositionsTotal() == 0) {
 
             int bars_now = Bars(NULL, PERIOD_M5); //Symbol name, Timeframe
             bool perform_prediction = false;
@@ -99,53 +98,67 @@ void OnTick()
                 bars_before = bars_now;
             }
 
-            if (PositionsTotal() == 0) {
-                if (perform_prediction) {
+            if (perform_prediction) {
 
-                    Print("Performing prediction...");
+                Print("Performing prediction...");
 
-                    m_symbol.Name(Symbol());
+                m_symbol.Name(Symbol());
 
-                    if(m_symbol.Digits()==3 || m_symbol.Digits()==5) digits_adjust=10;
+                if(m_symbol.Digits()==3 || m_symbol.Digits()==5) digits_adjust=10;
 
-                    m_adjusted_point = m_symbol.Point()*digits_adjust;
-                    m_take_profit = InpTakeProfit*m_adjusted_point;
-                    m_stop_loss = InpStopLoss*m_adjusted_point;
+                m_adjusted_point = m_symbol.Point()*digits_adjust;
+                m_take_profit = InpTakeProfit*m_adjusted_point;
+                m_stop_loss = InpStopLoss*m_adjusted_point;
 
-                    //double tp   = double Bid()+m_take_profit;
-                    double bid_price = SymbolInfoDouble(Symbol(),SYMBOL_BID);
-                    double ask_price = SymbolInfoDouble(Symbol(),SYMBOL_ASK);
-                   //Print("Helo - Zenstep2222: ", bid);
+                //double tp   = double Bid()+m_take_profit;
+                double bid_price = SymbolInfoDouble(Symbol(),SYMBOL_BID);
+                double ask_price = SymbolInfoDouble(Symbol(),SYMBOL_ASK);
+               //Print("Helo - Zenstep2222: ", bid);
 
-                    double tp = bid_price + m_take_profit;
-                    double sl = ask_price - m_stop_loss;
+                double tp = bid_price + m_take_profit;
+                double sl = ask_price - m_stop_loss;
 
-                    //Print("TP and SL: ", tp, " ", sl);
-                    int rsi                 = iRSI(NULL, PERIOD_M5,14,PRICE_CLOSE);
-                    int macd                = iMACD(NULL,PERIOD_M5,12,26,9,PRICE_CLOSE);
-                    double volume           = iVolume(NULL,PERIOD_M5,0);
-                    double stochastics      = iStochastic(NULL,PERIOD_M5,5,3,3,MODE_SMA,STO_LOWHIGH);
-                    double close_price      = iClose(NULL,PERIOD_M5,0);
-                    double open_price       = iOpen(NULL,PERIOD_M5,0);
+                //Print("TP and SL: ", tp, " ", sl);
+                /*
+                int rsi                 = iRSI(NULL, PERIOD_M5,14,PRICE_CLOSE);
+                int macd                = iMACD(NULL,PERIOD_M5,12,26,9,PRICE_CLOSE);
+                double volume           = iVolume(NULL,PERIOD_M5,0);
+                double stochastics      = iStochastic(NULL,PERIOD_M5,5,3,3,MODE_SMA,STO_LOWHIGH);
+                double close_price      = iClose(NULL,PERIOD_M5,0);
+                double open_price       = iOpen(NULL,PERIOD_M5,0);
+                */
+                int rsi_handle = iRSI(NULL, PERIOD_M5,14,PRICE_CLOSE);
+                double rsi_temp_array[];
+                if (CopyBuffer(rsi_handle, 0, 0, 1, rsi_temp_array) < 0) {Print("CopyBufferRSI error =", GetLastError());}
 
-                    int prediction = prediction(close_price, open_price, stochastics, volume);
-                    Print("Prediction: ", prediction);
+                int macd_handle = iMACD(NULL,PERIOD_M5,12,26,9,PRICE_CLOSE);
+                double macd_temp_array[];
+                if (CopyBuffer(macd_handle, 0, 0, 1, macd_temp_array) < 0) {Print("CopyBufferMacd error =", GetLastError());}
 
-                    if (prediction == 1) {
-                        if (m_trade.Buy( 1, _Symbol, 0.0, sl, tp)) {
-                          //--- success message
-                          Print( "The .Buy() method executed successfully. The return-code = ",m_trade.ResultRetcode()," ("
-                                 , m_trade.ResultRetcodeDescription(),")"
-                          );
-                        } else {
-                            Print ( "The .Buy() method failed. The return-code = ",m_trade.ResultRetcode(),". Code description: "
-                                    , m_trade.ResultRetcodeDescription()
-                            );
-                        }
+                int stochastics_handle = iStochastic(NULL,PERIOD_M5,5,3,3,MODE_SMA,STO_LOWHIGH);
+                double stochastics_temp_array[];
+                if (CopyBuffer(stochastics_handle, 0, 0, 1, stochastics_temp_array) < 0) {Print("CopyBufferStochs error =", GetLastError());}
+
+                double volume = iVolume(NULL,PERIOD_M5,0);
+
+                int prediction = prediction(rsi_temp_array[0], macd_temp_array[0], stochastics_temp_array[0], volume);
+                Print("Prediction: ", prediction);
+
+                if (prediction == 1) {
+                    if (m_trade.Buy( 1, _Symbol, 0.0, sl, tp)) {
+                      //--- success message
+                      Print( "The .Buy() method executed successfully. The return-code = ",m_trade.ResultRetcode()," ("
+                             , m_trade.ResultRetcodeDescription(),")"
+                      );
+                    } else {
+                        Print ( "The .Buy() method failed. The return-code = ",m_trade.ResultRetcode(),". Code description: "
+                                , m_trade.ResultRetcodeDescription()
+                        );
                     }
                 }
             }
         }
+    }
 
 
 /*
@@ -197,6 +210,7 @@ void OnTick()
 
         }
     }
-*/
+
   }
+*/
 //+------------------------------------------------------------------+
