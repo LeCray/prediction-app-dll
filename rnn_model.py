@@ -4,7 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import sklearn
 from sklearn.metrics import accuracy_score
-from numpy import loadtxt
+from numpy import loadtxt, savetxt
+import random
 
 dataset = np.genfromtxt('Data/SequenceBuyData.csv', delimiter=',') #Make sure to save the csv as a csv file again in MS Excel
 PATH = "./"
@@ -59,7 +60,7 @@ model = LSTM()
 loss_function = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-epochs = 150
+epochs = 30
 
 for i in range(epochs):
     for seq, labels in inout_seq:
@@ -75,10 +76,10 @@ for i in range(epochs):
         single_loss = loss_function(y_pred.squeeze(), labels.float())
         single_loss.backward()
         optimizer.step()
-
+        
         #running_loss += loss.item()
 
-    if i%25 == 1:
+    if i%2 == 1:
         print(f'epoch: {i:3} loss: {single_loss.item():10.8f}')
 
 #print(f'epoch: {i:3} loss: {single_loss.item():10.10f}')
@@ -86,10 +87,3 @@ for i in range(epochs):
 print("Saving model...")
 torch.save(model.state_dict(), './rnn_model.pth')
 print("Done.")
-
-'''
-model.eval()
-
-#We need to measure accuracy_score
-#We need to be able to make predictions
-'''

@@ -31,7 +31,7 @@ string latest_feature_sequence;
 bool started = false;
 
 string feature_label_array[];
-
+string balanced_array[];
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -42,14 +42,66 @@ int OnInit()
 //---
    return(INIT_SUCCEEDED);
   }
+
+void balanceArray() {
+    int win_count = 0;
+    int loss_count = 0;
+    int size = ArraySize(feature_label_array);
+
+    for (int i=0; i<size-1; i++) {
+        //Print(feature_label_array[i]);
+        int string_length = StringLen(feature_label_array[i]);
+        ushort label_from_string = StringGetCharacter(feature_label_array[i], string_length - 1);
+        //Print("label: ", CharToString(label_from_string));
+        string label = CharToString(label_from_string);
+        int bal_size = ArraySize(balanced_array);
+
+        if (label == "1"){
+            win_count ++;
+            //Adding 1 labels to the balanced array.
+            ArrayResize(balanced_array, bal_size + 1); //Increasing size of array.
+            balanced_array[bal_size] = feature_label_array[i]; //Updating last element.
+        } else {
+            loss_count++;
+        }
+    }
+
+    int add_count = 0;
+
+    //Below is to add 0 labels to the balanced array
+    for (int i=0; i<size; i++) {
+        int string_length = StringLen(feature_label_array[i]);
+        ushort label_from_string = StringGetCharacter(feature_label_array[i], string_length - 1);
+        string label = CharToString(label_from_string);
+
+        int bal_size = ArraySize(balanced_array);
+
+        if (label == "0" && add_count <= win_count){
+            ArrayResize(balanced_array, bal_size + 1); //Increasing size of array.
+            balanced_array[bal_size] = feature_label_array[i]; //Updating last element.
+            add_count++;
+        }
+    }
+
+/*
+    for (int i=0; i<ArraySize(balanced_array) - 1; i++) {
+        Print(balanced_array[i]);
+    }
+*/
+    Print("Wins: ", win_count, ", ", "Losses: ", loss_count);
+
+}
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason) {
-    int size = ArraySize(feature_label_array);
+
+
+    balanceArray();
+    int size = ArraySize(balanced_array);
 /*
     for (int i=0; i<size-1; i++) {
-        Print("Feature label array: ", feature_label_array[i]);
+        Print("Balanced array: ", balanced_array[i]);
     }
 */
     //Open file
@@ -59,8 +111,8 @@ void OnDeinit(const int reason) {
         PrintFormat("%s file is available for writing", InpFileName);
 
         for (int i=0; i < size-1; i++) {
-            Print("Data being written: ", feature_label_array[i]);
-            FileWrite(file_handle, feature_label_array[i]);
+            //Print("Data being written: ", balanced_array[i]);
+            FileWrite(file_handle, balanced_array[i]);
         }
         //--- close the file
         FileClose(file_handle);
@@ -68,6 +120,7 @@ void OnDeinit(const int reason) {
     } else {
         PrintFormat("Failed to open %s file, Error code = %d", InpFileName, GetLastError());
     }
+
 }
 string findLatestOutcome() {
     //Checking if the last deal was a win or a loss ===================================================================
@@ -94,9 +147,10 @@ string findLatestOutcome() {
 }
 string generateStochSequence() {
     double stochastics_signal_sequence_array[];
-    int stochastics_handle = iStochastic(NULL,PERIOD_M5,5,3,3,MODE_SMA,STO_LOWHIGH);
+    //int stochastics_handle = iStochastic(NULL,PERIOD_M5,5,3,3,MODE_SMA,STO_LOWHIGH);
+    int stochastics_handle = iRSI(NULL, PERIOD_M5, 14, PRICE_CLOSE);
 
-    if (CopyBuffer(stochastics_handle, 1, 0, 100, stochastics_signal_sequence_array) < 0) { //We're storing the signal!
+    if (CopyBuffer(stochastics_handle, 0, 0, 100, stochastics_signal_sequence_array) < 0) { //We're storing the signal!
         Print("CopyBufferStochs error =", GetLastError());                                 //Buffer number = 1 for signal
     }
 
