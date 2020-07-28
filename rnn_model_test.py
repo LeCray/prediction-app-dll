@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import sklearn
 from sklearn.metrics import accuracy_score
 from numpy import loadtxt
+import random
 
 dataset = np.genfromtxt('Data/SequenceBuyData.csv', delimiter=',') #Make sure to save the csv as a csv file again in MS Excel
 PATH = "./"
@@ -13,6 +14,7 @@ row_count = sum(1 for row in dataset)
 
 trainingData = dataset[0:round(row_count*0.7),]
 testingData = dataset[round(row_count*0.7):row_count,:]
+random.shuffle(testingData)
 
 train_window = 100 #tw
 
@@ -20,6 +22,9 @@ training_seq = trainingData[:,0:99]
 training_label = trainingData[:,100]
 testing_seq = testingData[:,0:99]
 testing_label = testingData[:,100]
+
+
+
 
 #Converting arrays to Tensors
 training_seq = torch.from_numpy(training_seq).type(torch.FloatTensor)
@@ -65,14 +70,16 @@ total = 0
 with torch.no_grad():
     for seq, label in inout_seq:
         y_pred = model(seq)
-        print("Prediction: ", round(y_pred.item(), 5), "|",  "Label: ", label.item())
+        #print("Prediction: ", round(y_pred.item(), 5), "|",  "Label: ", label.item())
 
         if y_pred >= 0.5:
             y_pred = 1
         else:
             y_pred = 0
 
-        if y_pred == 1 and y_pred == label:
+        print("Prediction: ", y_pred, ",",  "Label: ", label.item())
+
+        if y_pred == label:
             correct += 1
 
         total += 1
@@ -80,4 +87,4 @@ with torch.no_grad():
 print("Correct: ", correct)
 print("Total: ", total)
 
-print('Accuracy: %d %%' % (100 * correct / total))
+print("Accuracy:", round((100 * correct / total),2), "%")

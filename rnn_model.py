@@ -57,10 +57,11 @@ class LSTM(nn.Module): #My new LSTM class inherits methods and functions from nn
         return predictions[-1]
 
 model = LSTM()
+model.load_state_dict(torch.load('./rnn_model.pth'))
 loss_function = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-epochs = 30
+epochs = 50
 
 for i in range(epochs):
     for seq, labels in inout_seq:
@@ -76,7 +77,7 @@ for i in range(epochs):
         single_loss = loss_function(y_pred.squeeze(), labels.float())
         single_loss.backward()
         optimizer.step()
-        
+
         #running_loss += loss.item()
 
     if i%2 == 1:
