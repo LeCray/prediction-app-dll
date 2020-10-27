@@ -9,15 +9,27 @@
 
 #include <v1\v1Buy.mqh>;
 
-input int us100_volume  = 1;
-input int us30_volume   = 1;
-input int amzn_volume   = 1;
-input int netflix_volume   = 1;
+input double us100_volume  = 1;
+input double us30_volume   = 1;
+input double amzn_volume   = 1;
+input double netflix_volume   = 1;
+input double fra40_volume   = 1;
+input double ger30_volume   = 1;
+
 
 int us100_prev_bar_count;
 int us30_prev_bar_count;
 int amzn_prev_bar_count;
 int netflix_prev_bar_count;
+int fra40_prev_bar_count;
+int ger30_prev_bar_count;
+
+ulong us100_magic_no = 1;
+ulong us30_magic_no = 2;
+ulong amzn_magic_no = 3;
+ulong netflix_magic_no = 4;
+ulong fra40_magic_no = 5;
+ulong ger30_magic_no = 6;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -30,6 +42,8 @@ int OnInit()
     us30_prev_bar_count     = Bars("US30Cash", PERIOD_H1);
     amzn_prev_bar_count     = Bars("Amazon", PERIOD_M1);
     netflix_prev_bar_count     = Bars("Netflix", PERIOD_M5);
+    fra40_prev_bar_count     = Bars("FRA40Cash", PERIOD_M1);
+    ger30_prev_bar_count     = Bars("GER30Cash", PERIOD_M1);
 //---
    return(INIT_SUCCEEDED);
   }
@@ -47,6 +61,7 @@ void OnDeinit(const int reason)
 void OnTimer()
   {
 //---
+
     v1Buy(
         "US100Cash",            //symbol
         PERIOD_H1,              //period
@@ -61,6 +76,7 @@ void OnTimer()
         15,                     //slow_ma
         5                       //signal
     );
+
     v1Buy(
         "US30Cash",
         PERIOD_H1,
@@ -89,7 +105,7 @@ void OnTimer()
         70,                     //slow_ma
         15                       //signal
     );
-    /*
+
     v1Buy(
         "Netflix",            //symbol
         PERIOD_M5,              //period
@@ -105,20 +121,34 @@ void OnTimer()
         10                       //signal
     );
 
-    /*
     v1Buy(
-        string symbol           = "US30Cash",
-        ENUM_TIMEFRAMES period  = PERIOD_H1,
-        int prev_bar_count      = us100_prev_bar_count,
-        int vol                 = us100_volume,
-        int stoploss            = 19400,
-        int ma_period1          = 5,
-        int ma_period2          = 25,
-        int ma_period3          = 150,
-        int fast_ma             = 20,
-        int slow_ma             = 15,
-        int signal              = 5
+        "FRA40Cash",
+        PERIOD_M1,
+        fra40_prev_bar_count,
+        fra40_volume,
+        5,
+        6540,
+        51,
+        59,
+        277,
+        45,
+        83,
+        21
     );
-    */
+    v1Buy(
+        "GER30Cash",
+        PERIOD_M1,
+        ger30_prev_bar_count,
+        ger30_volume,
+        6,
+        9340,
+        7,
+        159,
+        99,
+        77,
+        1,
+        93
+    );
+
   }
 //+------------------------------------------------------------------+

@@ -46,6 +46,7 @@ bool buyAnalysis(
     double &ma1[], double &ma2[], double &ma3[],
     string symbol,
     ENUM_TIMEFRAMES period,
+    ulong magic_number,
     int fast_ma,
     int slow_ma,
     int signal
@@ -79,7 +80,22 @@ bool buyAnalysis(
     bool macd_conditions = macd_cond1 && macd_cond2;
 
     if (buy_conditions && macd_conditions) {
-        if (PositionsTotal() == 0) { //Only do something when not in an active trade.
+
+        bool in_position = false;
+
+        for (int i = PositionsTotal() - 1; i >= 0; i--) { //Backwards, forwards...what't the difference?
+
+            string position_symbol = PositionGetSymbol(i); //SELECTING position i for further processing
+            ulong position_magic_number = PositionGetInteger(POSITION_MAGIC);
+
+            if (position_magic_number == magic_number) {
+                if (position_symbol == symbol) {
+                    in_position = true;
+                }
+            }
+        }
+
+        if (in_position == false) {
             return true;
         } else {
             return false;
@@ -105,27 +121,39 @@ void v1Buy(
 ) {
 
     if (PositionsTotal() > 0) { //Trailing Stoploss Logic
-        double ask_price = SymbolInfoDouble(Symbol(),SYMBOL_ASK);
-        double bid_price = SymbolInfoDouble(Symbol(),SYMBOL_BID);
 
+        int min_stoploss_points = SymbolInfoInteger(symbol, SYMBOL_TRADE_STOPS_LEVEL);
+
+        //Print("Minumum stoploss: ", symbol, ", ", ask_price - min_stoploss_points*Point());
+        //double buy_min_sl_price = ask_price - min_stoploss_points*Point();
         //Stoploss is a price! //Setting trailing sl price to 150 points below the Ask price. It's a price.
         //It needs to get rounded off to 5 decimeal places i.e. Digits()
-        double buy_trailing_sl_price = ask_price - stoploss*Point();
-        double sell_trailing_sl_price = bid_price + stoploss*Point();
+
 
         for (int i = PositionsTotal() - 1; i >= 0; i--) { //Backwards, forwards...what't the difference?
+
             string position_symbol = PositionGetSymbol(i); //SELECTING position i for further processing
             ulong position_magic_number = PositionGetInteger(POSITION_MAGIC);
 
-            if (position_magic_number = magic_number) {
-                //Print("MAGIC NUMBERS ARE EQUAL!!", symbol);
-                ulong position_ticket = PositionGetInteger(POSITION_TICKET);
-                int position_type = PositionGetInteger(POSITION_TYPE); //0 = Buy, 1 = Sell
-                double current_sl_price = PositionGetDouble(POSITION_SL);
+            if (position_magic_number == magic_number) {
+                if (position_symbol == symbol) {
+                    double ask_price = SymbolInfoDouble(symbol, SYMBOL_ASK);
+                    double bid_price = SymbolInfoDouble(symbol, SYMBOL_BID);
+                    double buy_trailing_sl_price = ask_price - stoploss*Point();
+                    double sell_trailing_sl_price = bid_price + stoploss*Point();
+                    //Print("MAGIC NUMBERS ARE EQUAL!", symbol, ", ", position_magic_number, ", ", magic_number);
+                    ulong position_ticket = PositionGetInteger(POSITION_TICKET);
+                    int position_type = PositionGetInteger(POSITION_TYPE); //0 = Buy, 1 = Sell
+                    double current_sl_price = PositionGetDouble(POSITION_SL);
 
-                if (position_type == 0) { //Buy position therefore increase sl
-                    if (current_sl_price < buy_trailing_sl_price) {
-                        m_trade.PositionModify(position_ticket, (current_sl_price + 10*Point()), 0); //Bumping up the sl price by 10 points.
+                    if (position_type == 0) { //Buy position therefore increase sl
+                        if (current_sl_price < buy_trailing_sl_price) {
+
+                            //if (buy_trailing_sl_price < min_stoploss_points) {
+                                m_trade.PositionModify(position_ticket, (current_sl_price + 10*Point()), 0); //Bumping up the sl price by 10 points.
+                            //}
+
+                        }
                     }
                 }
             }
@@ -153,7 +181,7 @@ void v1Buy(
         if (CopyBuffer(ma_handle2,0,0,10,ma2) < 0) {Print("CopyBufferMA2 error =",GetLastError());}
         if (CopyBuffer(ma_handle3,0,0,10,ma3) < 0) {Print("CopyBufferMA3 error =",GetLastError());}
 
-        bool buy_analysis = buyAnalysis(ma1, ma2, ma3, symbol, period, fast_ma, slow_ma, signal);
+        bool buy_analysis = buyAnalysis(ma1, ma2, ma3, symbol, period, magic_number, fast_ma, slow_ma, signal);
 
         if (buy_analysis) {
             placeBuy(symbol, volume, magic_number, stoploss);
